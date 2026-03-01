@@ -1,7 +1,6 @@
 __pycache__/
 *.pyc
 *.pyo
-output/
 .DS_Store
 *.egg-info/
 dist/
