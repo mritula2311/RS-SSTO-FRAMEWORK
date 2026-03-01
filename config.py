@@ -54,8 +54,8 @@ APF_REPULSE_RANGE = 60.0
 # ─── RS-SSTO (proposed) ─────────────────────────────────────────────────────
 RSSTO_SWARM_W      = 0.4
 RSSTO_SWARM_C1     = 0.8
-RSSTO_SWARM_C2     = 1.5
-RSSTO_TENSION_K    = 1.8     # surface-tension repulsion coefficient
+RSSTO_SWARM_C2     = 1.2
+RSSTO_TENSION_K    = 12.0    # surface-tension repulsion coefficient
 RSSTO_SAFE_DIST    = 18.0    # safe inter-agent spacing (px)
 RSSTO_PANIC_ALPHA  = 0.5     # density weight in panic
 RSSTO_PANIC_BETA   = 0.5     # hazard weight in panic

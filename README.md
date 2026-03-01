@@ -115,6 +115,8 @@ rssto_simulation/
 
 ### 1. Social Force Model (SFM)
 
+**What you’ll see in the visualisation:** smooth goal-seeking motion; agents repel each other and obstacles; can jam under high density.
+
 **Reference:** Helbing & Molnár, 1995
 
 The classic pedestrian dynamics model. Each agent experiences three forces:
@@ -139,6 +141,8 @@ $$F_{\text{rep}} = A \cdot e^{-d / B} \cdot \hat{n}$$
 
 ### 2. Particle Swarm Optimisation (PSO)
 
+**What you’ll see in the visualisation:** agents sway toward their own best spot, then converge toward the globally best spot. Limited crowd-awareness means jams can form at exits.
+
 **Reference:** Kennedy & Eberhart, 1995
 
 Treats each agent as a particle in a swarm. The velocity update follows the standard PSO equation:
@@ -160,6 +164,8 @@ Additional obstacle and hazard avoidance nudges are applied post-update.
 ---
 
 ### 3. Ant Colony Optimisation (ACO)
+
+**What you’ll see in the visualisation:** agents initially beeline to the exit, then follow emerging pheromone “highways.” Early steps look noisy; later steps stabilize.
 
 **Reference:** Dorigo, Maniezzo & Colorni, 1996
 
@@ -184,6 +190,8 @@ An adaptive blend weight ramps pheromone influence over time as trails build up.
 ---
 
 ### 4. Artificial Potential Field (APF)
+
+**What you’ll see in the visualisation:** strong repulsion near obstacles/hazard; can oscillate or get stuck if a direct attractive path is blocked.
 
 **Reference:** Khatib, 1986
 
@@ -264,6 +272,82 @@ RS-SSTO's advantage comes from **integrating all five capabilities** simultaneou
 
 ---
 
+## How to read the visualisation (what’s drawn)
+
+- **Agents (circles):** color encodes panic (blue → orange → red). Size fixed for clarity.
+- **Trails (faint lines):** recent path history (last ~25 steps) to show route choices.
+- **Route line to exit:** green if clear; amber if it would cut through the hazard zone (algorithm must reroute).
+- **Velocity arrow:** shows current movement direction and speed magnitude.
+- **HUD (top-left):** algorithm name, frame, active/evacuated count, and average panic.
+
+Use `SPACE` to pause and step visually through tricky spots; use `ESC` to skip to the next algorithm.
+
+---
+
+## How each algorithm decides movement (pseudocode)
+
+**SFM (crowd physics)**
+1. Compute goal force toward exit.
+2. Add exponential repulsion from nearby agents.
+3. Add obstacle/hazard repulsion.
+4. Integrate acceleration → velocity → position.
+
+**PSO (swarm search)**
+1. Find global best agent (closest to exit).
+2. For each agent: update velocity with inertia + pull to personal best + pull to global best.
+3. Nudge away from obstacles/hazard.
+4. Move agent.
+
+**ACO (pheromone trails)**
+1. Evaporate pheromone grid; seed exit with pheromone.
+2. For each agent: blend pheromone-guided direction with goal heuristic.
+3. Deposit pheromone along traveled path (more if evacuated).
+4. Move agent.
+
+**APF (potential gradients)**
+1. Attractive pull toward exit.
+2. Repulsive push from obstacles/hazard within range.
+3. Light agent-agent repulsion for spacing.
+4. Move agent along resultant force.
+
+**RS-SSTO (hybrid swarm + surface tension + panic)**
+1. Swarm step (PSO-like) toward personal/global best.
+2. Surface-tension repulsion to keep safe spacing and avoid jams.
+3. Panic perturbation scaled by local density + hazard proximity.
+4. Obstacle slide + hazard repulsion.
+5. Strong goal pull to guarantee convergence.
+6. Move agent; update personal/global best.
+
+### Mini diagrams (mental model)
+
+```
+SFM: goal pull + repulsion
+   exit -->
+ [agent]  [agent]
+     ^   ^
+     repulsion
+
+PSO: inertia + pbest + gbest
+ gbest
+   ^
+ pbest -> agent (new velocity)
+
+ACO: pheromone highways
+ [agent] -> strong pheromone trail -> exit
+         <- weaker trail building
+
+APF: attract to exit, repel near obstacles
+ exit -->   X obstacle (repel)
+ agent o----^ (slides around)
+
+RS-SSTO: swarm + spacing + panic aware
+ swarm pull -->   hazard X (strong repel)
+    agents keep spacing (tension)
+    panic adds urgency but keeps flow
+```
+
+---
+
 ## Environment Setup
 
 | Property | Value |
@@ -302,6 +386,9 @@ python main.py
 # Real-time pygame visualisation
 python main.py --visual
 
+# Split-screen visual (compare two algorithms side-by-side; default PSO vs RS-SSTO)
+python main.py --visual-split PSO,RS-SSTO
+
 # Generate comparison bar charts
 python main.py --plots
 
@@ -315,6 +402,8 @@ python main.py --seed 123
 **Keyboard controls (visual mode):**
 - `SPACE` — Pause / Resume
 - `ESC` — Skip to next algorithm
+
+**Keyboard controls (split mode):** same as above; both panels pause together.
 
 ---
 

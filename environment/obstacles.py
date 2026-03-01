@@ -43,7 +43,7 @@ class Obstacle:
 
 
 def generate_obstacles(seed: int | None = None) -> list[Obstacle]:
-    """Create random non-overlapping obstacles away from exit & hazard."""
+    """Create random obstacles avoiding hazard and exit zones."""
     rng = np.random.default_rng(seed)
     obstacles: list[Obstacle] = []
     attempts = 0

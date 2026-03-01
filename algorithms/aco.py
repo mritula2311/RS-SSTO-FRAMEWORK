@@ -101,40 +101,51 @@ def aco_step(agents: list, environment, dt: float = 1.0) -> None:
             _phero.deposit(agent.pos, ACO_DEPOSIT * 2)
             continue
 
-        # Pheromone concentration at current position determines blend
+        # Distance-based pheromone influence
+        dist_to_goal = distance(agent.pos, agent.goal)
         local_phero = _phero.concentration(agent.pos)
-        # As pheromone builds, trust it more; start with strong goal pull
-        phero_weight = min(local_phero / 50.0, 0.6)
-        goal_weight  = 1.0 - phero_weight
-
-        # Direction from pheromone + heuristic
+        
+        # Pheromone weight decreases as we approach exit (stronger goal pull near exit)
+        if dist_to_goal < 100:
+            phero_weight = 0.15  # Very close: mostly direct goal  
+        elif dist_to_goal < 200:
+            phero_weight = min(local_phero / 25.0, 0.40)  # Medium: some pheromone
+        else:
+            phero_weight = min(local_phero / 18.0, 0.65)  # Far: trust pheromone more
+        
+        goal_weight = 1.0 - phero_weight
+        
+        # Direction from pheromone + heuristic (ACO guidance)
         phero_dir = _phero.best_neighbour_direction(agent.pos, agent.goal)
-
-        # Direct goal pull (always present)
+        
+        # Direct goal pull
         goal_dir = unit_vector(agent.pos, agent.goal)
-
-        direction = phero_weight * phero_dir + goal_weight * goal_dir
+        
+        # Blend: pheromone guidance + strong goal pull ensures evacuation
+        direction = phero_weight * phero_dir + goal_weight * goal_dir + 0.35 * goal_dir
         norm = np.linalg.norm(direction)
         if norm > 1e-8:
             direction /= norm
 
-        desired_vel = direction * agent.max_speed * 0.85
+        # Moderately slow cruise to align with other algos
+        desired_vel = direction * agent.max_speed * 0.9
 
         # Simple obstacle / hazard avoidance
         for obs in environment.obstacles:
             nearest = obs.nearest_point(agent.pos)
             diff = agent.pos - nearest
             d = float(np.linalg.norm(diff))
-            if 0 < d < 20:
-                desired_vel += (diff / d) * 1.5
+            if 0 < d < 24:
+                desired_vel += (diff / d) * 1.8
 
         hdiff = agent.pos - environment.hazard_pos
         hdist = float(np.linalg.norm(hdiff))
         if hdist < environment.hazard_radius * 1.5 and hdist > 1e-6:
-            desired_vel += (hdiff / hdist) * 2.0
+            desired_vel += (hdiff / hdist) * 1.8
 
-        agent.vel = clamp_speed(desired_vel, agent.max_speed)
+        # Clamp slightly below the shared cap for smoother visuals
+        agent.vel = clamp_speed(desired_vel, agent.max_speed * 0.9)
         agent.update_position(dt)
 
         # Deposit pheromone at current cell
-        _phero.deposit(agent.pos, ACO_DEPOSIT * 0.3)
+        _phero.deposit(agent.pos, ACO_DEPOSIT * 0.45)

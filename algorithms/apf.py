@@ -39,14 +39,14 @@ def apf_step(agents: list, environment, dt: float = 1.0) -> None:
             d = float(np.linalg.norm(diff))
             if 0 < d < d0:
                 n_hat = diff / d
-                force += APF_REPULSE_GAIN * ((1.0 / d - 1.0 / d0) ** 2) * (1.0 / (d * d)) * n_hat * 0.01
+                force += APF_REPULSE_GAIN * ((1.0 / d - 1.0 / d0) ** 2) * (1.0 / (d * d)) * n_hat * 0.2
 
         # 3. Repulsive — hazard zone
         hdiff = agent.pos - environment.hazard_pos
         hdist = float(np.linalg.norm(hdiff))
         if 0 < hdist < environment.hazard_radius * 2:
             h_hat = hdiff / hdist
-            force += APF_REPULSE_GAIN * ((1.0 / hdist - 1.0 / (environment.hazard_radius * 2)) ** 2) * (1.0 / (hdist * hdist)) * h_hat * 0.005
+            force += APF_REPULSE_GAIN * ((1.0 / hdist - 1.0 / (environment.hazard_radius * 2)) ** 2) * (1.0 / (hdist * hdist)) * h_hat * 0.15
 
         # 4. Agent-agent repulsion (light)
         for other in agents:
@@ -58,4 +58,6 @@ def apf_step(agents: list, environment, dt: float = 1.0) -> None:
                 force += (adiff / ad) * (25 - ad) * 0.05
 
         agent.apply_force(force, dt)
+        # Keep APF in medium-speed regime and emphasize smooth field curvature.
+        agent.vel = clamp_speed(agent.vel, agent.max_speed * 0.72)
         agent.update_position(dt)

@@ -21,6 +21,7 @@ from config import (
     RSSTO_SWARM_W, RSSTO_SWARM_C1, RSSTO_SWARM_C2,
     RSSTO_TENSION_K, RSSTO_SAFE_DIST,
     RSSTO_PANIC_ALPHA, RSSTO_PANIC_BETA,
+    EXIT_POS,
 )
 from utils.math_utils import unit_vector, distance, clamp_speed
 from models.surface_tension import compute_surface_tension_force
@@ -78,7 +79,7 @@ def rssto_step(agents: list, environment, dt: float = 1.0) -> None:
             alpha=RSSTO_PANIC_ALPHA,
             beta=RSSTO_PANIC_BETA,
         )
-        panic_noise = panic_velocity_perturbation(agent.panic, _rng)
+        panic_force = panic_velocity_perturbation(agent.panic, _rng)
 
         # ── 4. Obstacle avoidance (smooth boundary steering) ───────────
         obs_force = np.zeros(2)
@@ -102,11 +103,28 @@ def rssto_step(agents: list, environment, dt: float = 1.0) -> None:
         if hdist < environment.hazard_radius * 2.5 and hdist > 1e-6:
             hazard_force = (hdiff / hdist) * 4.0 * max(1.0 - hdist / (environment.hazard_radius * 2.5), 0)
 
-        # ── 6. Direct goal pull (ensures convergence) ───────────────────
+        # ── 6. Direct goal pull ─────────────────────────────────────────
         goal_dir = unit_vector(agent.pos, agent.goal)
-        goal_pull = goal_dir * 1.8
+        goal_force = goal_dir * 2.6
 
-        # ── Combine ─────────────────────────────────────────────────────
-        combined_vel = swarm_vel + st_force * 0.2 + panic_noise * 0.2 + obs_force + hazard_force + goal_pull
-        agent.vel = clamp_speed(combined_vel, agent.max_speed)
+        # ── 7. Exit-zone repulsion (reduce clustering near exit) ─────────
+        exit_pos = np.array(EXIT_POS, dtype=float)
+        exit_vec = agent.pos - exit_pos
+        exit_dist = float(np.linalg.norm(exit_vec))
+        if exit_dist < 100:
+            exit_repulsion = (exit_vec / (exit_dist + 1e-6)) * 1.5
+        else:
+            exit_repulsion = np.zeros(2)
+
+        # ── 8. Combine (optimized for speed + congestion control) ───────
+        combined_vel = (
+            swarm_vel * 0.9
+            + st_force * 0.6
+            + panic_force * 0.3
+            + obs_force * 0.6
+            + hazard_force * 0.7
+            + goal_force * 1.3
+        )
+        combined_vel += exit_repulsion
+        agent.vel = clamp_speed(combined_vel, min(agent.max_speed, 2.8))
         agent.update_position(dt)

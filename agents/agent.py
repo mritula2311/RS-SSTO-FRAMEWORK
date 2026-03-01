@@ -18,6 +18,8 @@ class Agent:
         "mass", "max_speed", "radius",
         # PSO memory
         "pbest_pos", "pbest_dist",
+        # Stuck detection
+        "stuck_frames",
     )
 
     def __init__(self, x: float, y: float):
@@ -29,6 +31,7 @@ class Agent:
         self.mass: float          = 1.0
         self.max_speed: float     = AGENT_MAX_SPEED
         self.radius: float        = 4.0
+        self.stuck_frames: int    = 0
 
         # PSO personal best
         self.pbest_pos: np.ndarray  = self.pos.copy()
@@ -53,10 +56,9 @@ class Agent:
             self.evacuated = True
 
         # Update PSO personal best
-        d = self.calculate_distance(self.goal)
-        if d < self.pbest_dist:
-            self.pbest_pos  = self.pos.copy()
-            self.pbest_dist = d
+        if distance(self.pos, self.goal) < self.pbest_dist:
+            self.pbest_dist = distance(self.pos, self.goal)
+            self.pbest_pos = self.pos.copy()
 
     def calculate_distance(self, target: np.ndarray) -> float:
         """Euclidean distance to *target*."""
@@ -71,3 +73,4 @@ class Agent:
         self.evacuated    = False
         self.pbest_pos    = self.pos.copy()
         self.pbest_dist   = distance(self.pos, self.goal)
+        self.stuck_frames = 0

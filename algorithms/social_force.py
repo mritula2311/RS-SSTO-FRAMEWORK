@@ -26,7 +26,7 @@ def sfm_step(agents: list, environment, dt: float = 1.0) -> None:
 
         # 1. Goal (driving) force
         direction = unit_vector(agent.pos, agent.goal)
-        desired_vel = SFM_DESIRED_SPEED * direction
+        desired_vel = SFM_DESIRED_SPEED * 1.18 * direction
         force += (desired_vel - agent.vel) / SFM_RELAX_TIME
 
         # 2. Agent-agent social repulsion (bounded)
@@ -39,7 +39,7 @@ def sfm_step(agents: list, environment, dt: float = 1.0) -> None:
                 continue
             n_hat = diff / d
             # Helbing-style but capped to avoid blow-up
-            rep_mag = min(SFM_REPULSION_A * np.exp(-d / (SFM_REPULSION_B * 100)), 8.0)
+            rep_mag = min(SFM_REPULSION_A * np.exp(-d / (SFM_REPULSION_B * 50)), 12.0)
             force += rep_mag * n_hat
 
         # 3. Obstacle repulsion
