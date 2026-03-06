@@ -1,0 +1,5 @@
+SFM: {'Evacuated': 46, 'Evacuation Time': 894, 'Avg Speed': 2.956, 'Congestion': 0.0, 'Throughput': 0.0515, 'Efficiency %': 92.0, 'Wall-clock (s)': 3.116}
+PSO: {'Evacuated': 48, 'Evacuation Time': 263, 'Avg Speed': 0.238, 'Congestion': 0.9183, 'Throughput': 0.1825, 'Efficiency %': 96.0, 'Wall-clock (s)': 1.414}
+ACO: {'Evacuated': 12, 'Evacuation Time': 275, 'Avg Speed': 2.499, 'Congestion': 0.0527, 'Throughput': 0.0436, 'Efficiency %': 24.0, 'Wall-clock (s)': 21.498}
+APF: {'Evacuated': 49, 'Evacuation Time': 260, 'Avg Speed': 2.968, 'Congestion': 0.0, 'Throughput': 0.1885, 'Efficiency %': 98.0, 'Wall-clock (s)': 1.118}
+RS-SSTO: {'Evacuated': 49, 'Evacuation Time': 243, 'Avg Speed': 2.997, 'Congestion': 0.0503, 'Throughput': 0.2016, 'Efficiency %': 98.0, 'Wall-clock (s)': 1.669}
